@@ -42,6 +42,7 @@ func (h *HTTPServer) serve(ctx *Context) {
 		if err != nil {
 			panic("failed to write content")
 		}
+		return
 	}
 	n.handler(ctx)
 }
