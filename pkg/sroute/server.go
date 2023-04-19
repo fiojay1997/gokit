@@ -7,7 +7,7 @@ import (
 
 var _ Server = &HTTPServer{}
 
-type HandleFunc func(ctx Context)
+type HandleFunc func(ctx *Context)
 
 type Server interface {
 	http.Handler
@@ -34,7 +34,16 @@ func (h *HTTPServer) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HTTPServer) serve(ctx *Context) {
-
+	n, ok := h.findRoute(ctx.Req.Method, ctx.Req.URL.Path)
+	if !ok || n.handler == nil {
+		// no route found
+		ctx.RespWriter.WriteHeader(http.StatusNotFound)
+		_, err := ctx.RespWriter.Write([]byte("Page Not Found"))
+		if err != nil {
+			panic("failed to write content")
+		}
+	}
+	n.handler(ctx)
 }
 
 func (h *HTTPServer) Get(path string, handleF HandleFunc) {

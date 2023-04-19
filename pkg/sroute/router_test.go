@@ -52,7 +52,7 @@ func TestAddRoute(t *testing.T) {
 		},
 	}
 
-	mockHandler := func(ctx Context) {}
+	mockHandler := func(ctx *Context) {}
 
 	r := newRouter()
 	for _, route := range testRoutes {
@@ -132,6 +132,94 @@ func TestAddRoute(t *testing.T) {
 	assert.Panics(t, func() {
 		r.addRoute(http.MethodGet, "/a//", mockHandler)
 	})
+}
+
+func TestFindRoute(t *testing.T) {
+	testRoutes := []struct {
+		method string
+		path   string
+	}{
+		{
+			method: http.MethodGet,
+			path:   "/",
+		},
+		{
+			method: http.MethodGet,
+			path:   "/user",
+		},
+		{
+			method: http.MethodGet,
+			path:   "/user/home",
+		},
+		{
+			method: http.MethodGet,
+			path:   "/order/detail",
+		},
+	}
+
+	r := newRouter()
+	mockHandler := func(ctx *Context) {}
+	for _, route := range testRoutes {
+		r.addRoute(route.method, route.path, mockHandler)
+	}
+
+	testCases := []struct {
+		name      string
+		method    string
+		path      string
+		wantFound bool
+		wantNode  *node
+		wantError bool
+	}{
+		{
+			name:      "not found",
+			method:    http.MethodOptions,
+			path:      "/user/home",
+			wantFound: false,
+			wantError: false,
+		},
+		{
+			name:      "user home",
+			method:    http.MethodGet,
+			path:      "/user/home",
+			wantFound: true,
+			wantNode: &node{
+				path:    "home",
+				handler: mockHandler,
+			},
+			wantError: false,
+		},
+		{
+			name:      "user no handler",
+			method:    http.MethodGet,
+			path:      "/user",
+			wantFound: true,
+			wantNode: &node{
+				path:    "user",
+				handler: mockHandler,
+				children: map[string]*node{
+					"home": {
+						handler: mockHandler,
+						path:    "home",
+					},
+				},
+			},
+			wantError: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			n, found := r.findRoute(tc.method, tc.path)
+			assert.Equal(t, tc.wantFound, found)
+			if !found {
+				return
+			}
+			assert.Equal(t, n.path, tc.wantNode.path)
+			equal := tc.wantNode.equals(n)
+			assert.True(t, equal)
+		})
+	}
 }
 
 func (r *router) equals(other *router) (bool, error) {

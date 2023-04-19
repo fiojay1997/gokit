@@ -59,6 +59,31 @@ func (r *router) addRoute(method string, path string, handleF HandleFunc) {
 	root.handler = handleF
 }
 
+func (r *router) findRoute(method string, path string) (*node, bool) {
+	root, ok := r.trees[method]
+	if !ok {
+		return nil, false
+	}
+	path = strings.Trim(path, "/")
+	segs := strings.Split(path, "/")
+	for _, seg := range segs {
+		child, found := root.childOf(seg)
+		if !found {
+			return nil, false
+		}
+		root = child
+	}
+	return root, root.handler != nil
+}
+
+func (n *node) childOf(path string) (*node, bool) {
+	if n.children == nil {
+		return nil, false
+	}
+	child, ok := n.children[path]
+	return child, ok
+}
+
 func (n *node) childOrCreate(seg string) *node {
 	if n.children == nil {
 		n.children = map[string]*node{}
