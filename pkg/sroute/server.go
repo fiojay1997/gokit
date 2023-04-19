@@ -16,7 +16,13 @@ type Server interface {
 }
 
 type HTTPServer struct {
-	r router
+	*router
+}
+
+func NewHTTPServer() *HTTPServer {
+	return &HTTPServer{
+		router: newRouter(),
+	}
 }
 
 func (h *HTTPServer) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
@@ -45,8 +51,4 @@ func (h *HTTPServer) Start(addr string) error {
 		return err
 	}
 	return http.Serve(l, h)
-}
-
-func (h *HTTPServer) AddRoute(method string, path string, handleF HandleFunc) {
-
 }
