@@ -20,7 +20,12 @@ func newRouter() *router {
 	}
 }
 
-func (r *router) AddRoute(method string, path string, handleF HandleFunc) {
+// AddRoute adds a path variables with a handler to the router
+func (r *router) addRoute(method string, path string, handleF HandleFunc) {
+	if strings.Contains(path, " ") || path == "" || len(path) == 0 {
+		panic("path variables cannot be empty")
+	}
+
 	root, ok := r.trees[method]
 	if !ok {
 		root = &node{
@@ -28,9 +33,26 @@ func (r *router) AddRoute(method string, path string, handleF HandleFunc) {
 		}
 		r.trees[method] = root
 	}
+
+	if path[0] != '/' {
+		path = "/" + path
+	}
+
+	if path != "/" && path[len(path)-1] == '/' {
+		path = path[:len(path)-1]
+	}
+
+	if path == "/" {
+		root.handler = handleF
+		return
+	}
+
 	path = path[1:]
 	segs := strings.Split(path, "/")
 	for _, seg := range segs {
+		if seg == "" {
+			panic("path variables cannot be empty")
+		}
 		child := root.childOrCreate(seg)
 		root = child
 	}

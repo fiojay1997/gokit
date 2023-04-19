@@ -12,7 +12,7 @@ type HandleFunc func(ctx Context)
 type Server interface {
 	http.Handler
 	Start(addr string) error
-	AddRoute(method string, path string, handleF HandleFunc)
+	addRoute(method string, path string, handleF HandleFunc)
 }
 
 type HTTPServer struct {
@@ -38,11 +38,11 @@ func (h *HTTPServer) serve(ctx *Context) {
 }
 
 func (h *HTTPServer) Get(path string, handleF HandleFunc) {
-	h.AddRoute(http.MethodGet, path, handleF)
+	h.addRoute(http.MethodGet, path, handleF)
 }
 
 func (h *HTTPServer) Post(path string, handleF HandleFunc) {
-	h.AddRoute(http.MethodPost, path, handleF)
+	h.addRoute(http.MethodPost, path, handleF)
 }
 
 func (h *HTTPServer) Start(addr string) error {
