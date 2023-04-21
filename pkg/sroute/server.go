@@ -7,6 +7,7 @@ import (
 
 var _ Server = &HTTPServer{}
 
+// HandleFunc defines a handler function to parse a path
 type HandleFunc func(ctx *Context)
 
 type Server interface {
